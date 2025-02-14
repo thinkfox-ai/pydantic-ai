@@ -1,0 +1,33 @@
+name: Upstream Sync
+
+# Run on schedule (here, every Monday and Thursday at 07:00 UTC)
+on:
+  schedule:
+    - cron: '0 7 * * 1,4'
+  # Allows you to manually trigger the workflow via GitHub’s UI
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout your fork’s default branch with full history
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          ref: main         # Change to your default branch if different
+          fetch-depth: 0    # Ensures full history is fetched
+
+      # Step 2: Sync upstream changes using the action
+      - name: Sync Upstream Changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+        with:
+          target_sync_branch: main                   # The branch in your fork to update
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}  # GitHub token (available by default)
+          upstream_sync_repo: pydantic/pydantic-ai       # The original repository
+          upstream_sync_branch: main                   # The upstream branch to merge from
+
+      # Step 3: Optionally display the result of the sync
+      - name: Display Sync Status
+        run: echo "Upstream sync completed with status: ${{ steps.sync.outputs.has_new_commits }}"
